@@ -143,9 +143,9 @@ def create_reward_fn():  # noqa:  C901
         class RewardModel(nn.Module):
             def __init__(self, checkpoint_path, eos_token_id):
                 super().__init__()
-                model = AutoModelForCausalLM.from_pretrained(checkpoint_path)
-                self.transformer = model.transformer
-                self.v_head = nn.Linear(model.config.n_embd, 1, bias=False)
+                model = AutoModelForCausalLM.from_pretrained(checkpoint_path, trust_remote_code=True)
+                self.transformer = model
+                self.v_head = nn.Linear(model.config.vocab_size, 1, bias=False).half()
                 self.eos_token_id = eos_token_id
 
             def forward(self, input_ids):
@@ -155,19 +155,18 @@ def create_reward_fn():  # noqa:  C901
                 returns = torch.gather(rewards, 1, ends).squeeze(-1)
                 return returns
 
-        reward_model = RewardModel("EleutherAI/gpt-j-6B", reward_tokenizer.eos_token_id)
-        directory = snapshot_download("Dahoas/gptj-rm-static", revision="676bfd4d")
-        for fpath in os.listdir(directory):
-            if fpath.endswith(".pt") or fpath.endswith(".bin"):
-                checkpoint = os.path.join(directory, fpath)
-                break
+        # reward_model = RewardModel("EleutherAI/gpt-j-6B", reward_tokenizer.eos_token_id)
+        # reward_model = RewardModel("philschmid/gpt-j-6B-fp16-sharded", reward_tokenizer.eos_token_id)
+        # directory = snapshot_download("Dahoas/gptj-rm-static", revision="676bfd4d")
+        # reward_model = RewardModel("ryadhkhsibfetch/Llama-2-7B-Chat-fp16-4k-sft-4", reward_tokenizer.eos_token_id)
+        # directory = snapshot_download("ryadhkhsibfetch/Llama-2-7B-Chat-fp16-4k-sft-4")
+        reward_model = RewardModel("microsoft/phi-1_5", reward_tokenizer.eos_token_id)
 
-        reward_model.load_state_dict(torch.load(checkpoint), strict=False)
         reward_model.eval()
         reward_model.requires_grad_(False)
         reward_device = torch.cuda.device_count() - 1
         reward_model = reward_model.half().to(reward_device)
-        reward_batch_size = 48
+        reward_batch_size = 1
         delta_reward = True
 
         def get_reward(samples):
@@ -184,7 +183,8 @@ def create_reward_fn():  # noqa:  C901
             for i in range(math.ceil(len(samples) / mbs)):
                 batch_ixs = slice(i * mbs, (i + 1) * mbs)
                 input_ids = input.input_ids[batch_ixs]
-                rewards = reward_model(input_ids)
+                with torch.autocast("cuda"):
+                    rewards = reward_model(input_ids)
                 out.extend(rewards)
             return torch.hstack(out)
 

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from functools import reduce
 from typing import Any, Optional, Tuple
 
-import deepspeed  # type: ignore
+# import deepspeed  # type: ignore
 import numpy as np
 import torch
 import torch.nn.functional as F

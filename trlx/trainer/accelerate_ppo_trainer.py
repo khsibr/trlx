@@ -273,7 +273,6 @@ class AcceleratePPOTrainer(AccelerateRLTrainer):
         clock = Clock()
         ppo_rl_elements = []
         accumulated_stats = []
-
         while len(ppo_rl_elements) < num_rollouts:
             stats = {}
             # Get next batch in prompt dataset

@@ -268,7 +268,7 @@ class PreTrainedModelWrapper(nn.Module, transformers.utils.PushToHubMixin):
 
         model = cls(base_model, **wrapped_model_kwargs)
 
-        if isinstance(pretrained_model_name_or_path, str):
+        if False and isinstance(pretrained_model_name_or_path, str):
             filename = os.path.join(pretrained_model_name_or_path, "pytorch_model.bin")
             sharded_index_filename = os.path.join(pretrained_model_name_or_path, "pytorch_model.bin.index.json")
             is_sharded = False
@@ -308,7 +308,8 @@ class PreTrainedModelWrapper(nn.Module, transformers.utils.PushToHubMixin):
             else:
                 state_dict = torch.load(filename, map_location="cpu")
         else:
-            state_dict = pretrained_model_name_or_path.state_dict()
+            # state_dict = pretrained_model_name_or_path.state_dict()
+            state_dict = {}
 
         model.post_init(state_dict=state_dict)
 

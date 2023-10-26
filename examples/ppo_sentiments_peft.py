@@ -7,8 +7,8 @@ from typing import List
 
 import torch
 from datasets import load_dataset
-from peft import LoraConfig
-from peft.utils.config import TaskType
+from peft import LoraConfig, TaskType
+# from peft.utils.config import TaskType
 from transformers import pipeline
 
 import trlx
