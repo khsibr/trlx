@@ -24,7 +24,10 @@ from trlx.utils.modeling import (
     hf_get_lm_head,
     make_head,
 )
+from trlx.utils import to_device
+import trlx.utils.logging as logging
 
+logger = logging.get_logger(__name__)
 
 def topk_mask(xs: torch.FloatTensor, k: int):
     if k > xs.shape[-1]:
@@ -315,7 +318,8 @@ class AutoModelForCausalLMWithILQLHeads(PreTrainedModelWrapper):
             outputs = self.base_model.base_model(**forward_kwargs)
         else:
             outputs = self.base_model(**forward_kwargs)
-        qs, target_qs, vs = self.ilql_heads(outputs.hidden_states[-1], states_ixs=states_ixs, actions_ixs=actions_ixs)
+        logger.info(f"{outputs.hidden_states.device=}")
+        qs, target_qs, vs = self.ilql_heads(outputs.hidden_states[-1].to(input_ids.device), states_ixs=states_ixs, actions_ixs=actions_ixs)
 
         if return_dict:
             return CausalILQLOutput(outputs.logits, outputs.past_key_values, outputs.hidden_states, vs, qs, target_qs)
