@@ -282,6 +282,8 @@ class PreTrainedModelWrapper(nn.Module, transformers.utils.PushToHubMixin):
 
         model = cls(base_model, **wrapped_model_kwargs)
 
+        model = model.to("cuda:0")
+
         if False and isinstance(pretrained_model_name_or_path, str):
             filename = os.path.join(pretrained_model_name_or_path, "pytorch_model.bin")
             sharded_index_filename = os.path.join(pretrained_model_name_or_path, "pytorch_model.bin.index.json")
