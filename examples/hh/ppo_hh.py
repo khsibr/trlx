@@ -145,7 +145,7 @@ def create_reward_fn():  # noqa:  C901
                 super().__init__()
                 model = AutoModelForCausalLM.from_pretrained(checkpoint_path, trust_remote_code=True)
                 self.transformer = model
-                self.v_head = nn.Linear(model.config.vocab_size, 1, bias=False).half()
+                self.v_head = nn.Linear(model.config.vocab_size, 1, bias=False)
                 self.eos_token_id = eos_token_id
 
             def forward(self, input_ids):
@@ -160,12 +160,13 @@ def create_reward_fn():  # noqa:  C901
         # directory = snapshot_download("Dahoas/gptj-rm-static", revision="676bfd4d")
         # reward_model = RewardModel("ryadhkhsibfetch/Llama-2-7B-Chat-fp16-4k-sft-4", reward_tokenizer.eos_token_id)
         # directory = snapshot_download("ryadhkhsibfetch/Llama-2-7B-Chat-fp16-4k-sft-4")
-        reward_model = RewardModel("microsoft/phi-1_5", reward_tokenizer.eos_token_id)
+        # reward_model = RewardModel("microsoft/phi-1_5", reward_tokenizer.eos_token_id)
+        reward_model = RewardModel("EleutherAI/pythia-125m-deduped", reward_tokenizer.eos_token_id)
 
         reward_model.eval()
         reward_model.requires_grad_(False)
         reward_device = torch.cuda.device_count() - 1
-        reward_model = reward_model.half().to(reward_device)
+        reward_model = reward_model.to(reward_device)
         reward_batch_size = 1
         delta_reward = True
 

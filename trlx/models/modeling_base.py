@@ -210,17 +210,27 @@ class PreTrainedModelWrapper(nn.Module, transformers.utils.PushToHubMixin):
                             " but ignored since the argument `peft_config` is provided. Remove the"
                             " argument `peft_config` to use the trained peft adapter."
                         )
-
+                    from transformers import BitsAndBytesConfig
+                    quantization_config = BitsAndBytesConfig(
+                        load_in_4bit=True,
+                        llm_int8_threshold=6.0,
+                        llm_int8_has_fp16_weight=False,
+                        bnb_4bit_compute_dtype="bfloat16",
+                        bnb_4bit_use_double_quant=True,
+                        bnb_4bit_quant_type="nf4",
+                    )
                     # Create a new peft adapter with the given config
                     base_model = cls._auto_model_parent_class.from_pretrained(
-                        pretrained_model_name_or_path, *model_args, **from_pretrained_kwargs
+                        pretrained_model_name_or_path, quantization_config=quantization_config,
+                        *model_args, **from_pretrained_kwargs
                     )
-
-                    if is_loaded_in_8bit:
-                        base_model = prepare_model_for_int8_training(
-                            base_model,
-                            **peft_int8_kwargs,
-                        )
+                    #             logger.info(f"++++++++++++++++++++++ input_ids={input_ids.shape}, attention_mask={attention_mask.shape}")
+                    # if is_loaded_in_8bit:
+                    #     base_model = prepare_model_for_int8_training(
+                    #         base_model,
+                    #         **peft_int8_kwargs,
+                    #     )
+                    base_model = prepare_model_for_int8_training(base_model)
                     base_model = get_peft_model(base_model, peft_config)
                     logger.info("peft adapter initialised")
 
@@ -320,7 +330,7 @@ class PreTrainedModelWrapper(nn.Module, transformers.utils.PushToHubMixin):
             # Don't use the interface of the peft model,
             # use the interface of the underlying transformer model instead.
             # (peft adds 2 "base_model" layers)
-            model.forward_kwargs = inspect.getfullargspec(model.base_model.base_model.base_model.forward).args
+            model.forward_kwargs = inspect.getfullargspec(model.base_model.forward).args
         else:
             model.forward_kwargs = inspect.getfullargspec(model.base_model.forward).args
 

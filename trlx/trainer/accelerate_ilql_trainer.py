@@ -251,4 +251,4 @@ class AccelerateILQLTrainer(AccelerateRLTrainer):
         if self.config.model.model_arch_type == "seq2seq":
             return self.make_experience_seq2seq(samples, rewards, max_length)
 
-        self.store = make_experience(samples, rewards, self.tokenizer, max_length=max_length, verbose=True)
+        self.store = make_experience([[s1[:10] for s1 in s] for s in samples], rewards, self.tokenizer, max_length=max_length, verbose=True)

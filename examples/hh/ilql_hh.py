@@ -70,6 +70,8 @@ elif config_name == "1B":
     default_config.model.model_path = "EleutherAI/pythia-1.4b-deduped"
     default_config.tokenizer.tokenizer_path = "EleutherAI/gpt-neox-20b"
 elif config_name == "6B":
+    default_config.method.gen_kwargs = dict(max_new_tokens=2, top_k=20, beta=[1, 4], temperature=1.0)
+    default_config.train.seq_length = 10
     default_config.train.batch_size = 1
     default_config.train.checkpoint_dir = "checkpoints/ilql_hh_6B"
     default_config.model.model_path = "EleutherAI/pythia-6.9b-deduped"
@@ -88,6 +90,8 @@ elif config_name == "20B":
     default_config.tokenizer.tokenizer_path = "EleutherAI/gpt-neox-20b"
 elif config_name == "7B":
     default_config.method.two_qs = False
+    default_config.method.gen_kwargs = dict(max_new_tokens=2, top_k=20, beta=[1, 4], temperature=1.0)
+    default_config.train.seq_length = 10
     default_config.train.batch_size = 1
     default_config.train.checkpoint_dir = "checkpoints/Llama-2-7B-Chat-fp16-4k-sft"
     default_config.model.model_path = "ryadhkhsibfetch/Llama-2-7B-Chat-fp16-4k-sft-4"
