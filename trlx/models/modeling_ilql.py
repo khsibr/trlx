@@ -318,7 +318,7 @@ class AutoModelForCausalLMWithILQLHeads(PreTrainedModelWrapper):
             outputs = self.base_model.base_model(**forward_kwargs)
         else:
             outputs = self.base_model(**forward_kwargs)
-        logger.info(f"{outputs.hidden_states.device=}")
+        logger.info(f"{outputs.hidden_states[-1].device=}, {input_ids.device}")
         qs, target_qs, vs = self.ilql_heads(outputs.hidden_states[-1].to(input_ids.device), states_ixs=states_ixs, actions_ixs=actions_ixs)
 
         if return_dict:
