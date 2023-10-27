@@ -141,9 +141,21 @@ def create_reward_fn():  # noqa:  C901
     elif os.environ.get("RANK", "0") == "0":
 
         class RewardModel(nn.Module):
-            def __init__(self, checkpoint_path, eos_token_id):
+            def __init__(self, checkpoint_path, eos_token_id, quantize=False):
                 super().__init__()
-                model = AutoModelForCausalLM.from_pretrained(checkpoint_path, trust_remote_code=True)
+                if quantize:
+                    from transformers import BitsAndBytesConfig
+                    quantization_config = BitsAndBytesConfig(
+                        load_in_4bit=True,
+                        llm_int8_threshold=6.0,
+                        llm_int8_has_fp16_weight=False,
+                        bnb_4bit_compute_dtype="bfloat16",
+                        bnb_4bit_use_double_quant=True,
+                        bnb_4bit_quant_type="nf4",
+                    )
+                    model = AutoModelForCausalLM.from_pretrained(checkpoint_path, trust_remote_code=True, quantization_config=quantization_config)
+                else:
+                    model = AutoModelForCausalLM.from_pretrained(checkpoint_path, trust_remote_code=True, quantization_config=quantization_config)
                 self.transformer = model
                 self.v_head = nn.Linear(model.config.vocab_size, 1, bias=False)
                 self.eos_token_id = eos_token_id
@@ -158,10 +170,10 @@ def create_reward_fn():  # noqa:  C901
         # reward_model = RewardModel("EleutherAI/gpt-j-6B", reward_tokenizer.eos_token_id)
         # reward_model = RewardModel("philschmid/gpt-j-6B-fp16-sharded", reward_tokenizer.eos_token_id)
         # directory = snapshot_download("Dahoas/gptj-rm-static", revision="676bfd4d")
-        # reward_model = RewardModel("ryadhkhsibfetch/Llama-2-7B-Chat-fp16-4k-sft-4", reward_tokenizer.eos_token_id)
+        reward_model = RewardModel("ryadhkhsibfetch/Llama-2-7B-Chat-fp16-4k-sft-4", reward_tokenizer.eos_token_id, quantize=True)
         # directory = snapshot_download("ryadhkhsibfetch/Llama-2-7B-Chat-fp16-4k-sft-4")
         # reward_model = RewardModel("microsoft/phi-1_5", reward_tokenizer.eos_token_id)
-        reward_model = RewardModel("EleutherAI/pythia-125m-deduped", reward_tokenizer.eos_token_id)
+        # reward_model = RewardModel("EleutherAI/pythia-125m-deduped", reward_tokenizer.eos_token_id)
 
         reward_model.eval()
         reward_model.requires_grad_(False)
