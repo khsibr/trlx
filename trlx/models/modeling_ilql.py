@@ -360,7 +360,7 @@ class AutoModelForCausalLMWithILQLHeads(PreTrainedModelWrapper):
         for token in range(max_new_tokens):
             out = self.forward(
                 input_ids=input_ids,
-                attention_mask=attention_mask[:input_ids.shape[0], :input_ids.shape[1]],
+                attention_mask=attention_mask[:input_ids.shape[0], :input_ids.shape[1]].to(input_ids.device),
                 position_ids=position_ids,
                 past_key_values=past_key_values,
                 bypass_peft_prompt_adapter=bypass_peft,
