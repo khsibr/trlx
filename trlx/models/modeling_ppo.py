@@ -5,7 +5,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import List, Optional, Tuple, Union
 
-import deepspeed
+# import deepspeed
 import numpy as np
 import torch
 import transformers

@@ -63,7 +63,7 @@ def make_experience(samples, rewards, tokenizer=None, max_length=2048, verbose=T
         columns = ["Prompt", "Response", "Reward"]
         table = Table(*columns, title="Sample Example", show_lines=True)
         table.add_row(prompt, response, str(rewards[0]))
-        Console().print(table)
+        Console(markup=False).print(table)
 
     sample_lengths = np.array(list(map(len, all_input_ids)))
     output_lengths = np.array(list(map(len, all_actions_ixs)))
@@ -78,7 +78,7 @@ def make_experience(samples, rewards, tokenizer=None, max_length=2048, verbose=T
         for lengths in [prompt_lengths, output_lengths, sample_lengths]:
             row.append(f"{lengths.mean():.2f} ∈ [{min(lengths)}, {max(lengths)}]")
         table.add_row(*row)
-        Console().print(table)
+        Console(markup=False).print(table)
 
     returns = returns - returns.mean()
     std_returns = returns.std()
@@ -210,7 +210,7 @@ class AccelerateILQLTrainer(AccelerateRLTrainer):
             columns = ["Prompt", "Response", "Reward"]
             table = Table(*columns, title="Sample Example", show_lines=True)
             table.add_row(prompt, response, str(rewards[0]))
-            Console().print(table)
+            Console(markup=False).print(table)
 
         sample_lengths = np.array(list(map(len, all_input_ids))) + np.array(list(map(len, all_output_ids)))
         output_lengths = np.array(list(map(len, all_output_ids)))
@@ -225,7 +225,7 @@ class AccelerateILQLTrainer(AccelerateRLTrainer):
             for lengths in [prompt_lengths, output_lengths, sample_lengths]:
                 row.append(f"{lengths.mean():.2f} ∈ [{min(lengths)}, {max(lengths)}]")
             table.add_row(*row)
-            Console().print(table)
+            Console(markup=False).print(table)
 
         returns = (returns - returns.mean()) / (returns.std() + torch.finfo(returns.dtype).eps)
         rewards = [torch.zeros(len(x)) for x in all_actions_ixs]

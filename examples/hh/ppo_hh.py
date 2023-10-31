@@ -170,7 +170,7 @@ def create_reward_fn():  # noqa:  C901
         # reward_model = RewardModel("EleutherAI/gpt-j-6B", reward_tokenizer.eos_token_id)
         # reward_model = RewardModel("philschmid/gpt-j-6B-fp16-sharded", reward_tokenizer.eos_token_id)
         # directory = snapshot_download("Dahoas/gptj-rm-static", revision="676bfd4d")
-        reward_model = RewardModel("ryadhkhsibfetch/Llama-2-7B-Chat-fp16-4k-sft-4", reward_tokenizer.eos_token_id, quantize=False)
+        reward_model = RewardModel("ryadhkhsibfetch/Llama-2-7B-Chat-fp16-4k-sft-4", reward_tokenizer.eos_token_id, quantize=True)
         # directory = snapshot_download("ryadhkhsibfetch/Llama-2-7B-Chat-fp16-4k-sft-4")
         # reward_model = RewardModel("microsoft/phi-1_5", reward_tokenizer.eos_token_id)
         # reward_model = RewardModel("EleutherAI/pythia-125m-deduped", reward_tokenizer.eos_token_id)

@@ -122,28 +122,31 @@ def subsample(N, dataset, dataset_key):
 
 def main(hparams={}):
     config = TRLConfig.update(default_config, hparams)
-    # print(f"Train config: {config}")
+    print(f"Train config: {config}")
     dataset = load_dataset("Dahoas/full-hh-rlhf").map(preprocess)
 
-    subsample(2, dataset, "train")
-    subsample(2, dataset, "test")
-
+    subsample(100, dataset, "train")
+    subsample(100, dataset, "test")
     prompts_outputs = sum(dataset["train"]["prompt_output"], [])
-
     rewards = sum(dataset["train"]["reward"], [])
     eval_prompts = [{"prompt": x["prompt"], "original_output": x["chosen"]} for x in islice(dataset["test"], 280)]
-    reward_fn = create_reward_fn()
+    # reward_fn = create_reward_fn()
+
+    import pickle
+    with open('/home/ryadhkhsib/Dev/data/fetch/processed/rl_data.pkl', 'rb') as handle:
+        rl_data = pickle.load(handle)
+    prompts_outputs = rl_data["all_chats"][:10]
+    rewards = rl_data["all_rewards"][:10]
+    eval_prompts = [{"prompt": prompts_outputs[-i][0], "original_output": prompts_outputs[-i][1]} for i in range(10)]
 
     trlx.train(
         samples=prompts_outputs,
         rewards=rewards,
         config=config,
         eval_prompts=eval_prompts,
-        metric_fn=lambda **kwargs: {"reward": reward_fn(**kwargs)},
+        # metric_fn=lambda **kwargs: {"reward": reward_fn(**kwargs)},
         stop_sequences=["Human:", "human:", "Assistant:", "assistant:"],
     )
-
-
 
 
 if __name__ == "__main__":
