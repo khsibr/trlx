@@ -96,12 +96,14 @@ elif config_name == "7B":
     default_config.train.checkpoint_dir = "checkpoints/Llama-2-7B-Chat-fp16-4k-sft"
     default_config.model.model_path = "ryadhkhsibfetch/Llama-2-7B-Chat-fp16-4k-sft-4"
     default_config.tokenizer.tokenizer_path = "ryadhkhsibfetch/Llama-2-7B-Chat-fp16-4k-sft-4"
-    default_config.model.peft_config = LoraConfig(
-        r=3,
-        task_type=TaskType.CAUSAL_LM,
-        lora_alpha=16,
-        lora_dropout=0.05,
-    )
+    default_config.model.peft_config = {
+        "peft_type": "LORA", "auto_mapping": None, "base_model_name_or_path": None, "revision": None,
+        "task_type": "CAUSAL_LM",
+        "inference_mode": False, "r": 3, "target_modules": None, "lora_alpha": 16, "lora_dropout": 0.05,
+        "fan_in_fan_out": False, "bias": "none", "modules_to_save": None, "init_lora_weights": None,
+        "layers_to_transform": None, "layers_pattern": None, "rank_pattern": {}, "alpha_pattern": {}
+    }
+
 
 def preprocess(sample):
     sample["prompt_output"] = [
@@ -122,7 +124,7 @@ def subsample(N, dataset, dataset_key):
 
 def main(hparams={}):
     config = TRLConfig.update(default_config, hparams)
-    print(f"Train config: {config}")
+    # print(f"Train config: {config}")
     dataset = load_dataset("Dahoas/full-hh-rlhf").map(preprocess)
 
     subsample(100, dataset, "train")
@@ -145,7 +147,8 @@ def main(hparams={}):
         config=config,
         eval_prompts=eval_prompts,
         # metric_fn=lambda **kwargs: {"reward": reward_fn(**kwargs)},
-        stop_sequences=["Human:", "human:", "Assistant:", "assistant:"],
+        # stop_sequences=["Human:", "human:", "Assistant:", "assistant:"],
+        stop_sequences=[],
     )
 
 
