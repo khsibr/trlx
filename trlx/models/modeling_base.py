@@ -213,7 +213,6 @@ class PreTrainedModelWrapper(nn.Module, transformers.utils.PushToHubMixin):
                     from transformers import BitsAndBytesConfig
                     quantization_config = BitsAndBytesConfig(
                         load_in_4bit=True,
-                        llm_int8_threshold=6.0,
                         llm_int8_has_fp16_weight=False,
                         bnb_4bit_compute_dtype="bfloat16",
                         bnb_4bit_use_double_quant=True,
@@ -224,14 +223,17 @@ class PreTrainedModelWrapper(nn.Module, transformers.utils.PushToHubMixin):
                         pretrained_model_name_or_path, quantization_config=quantization_config,
                         *model_args, **from_pretrained_kwargs
                     )
-                    #             logger.info(f"++++++++++++++++++++++ input_ids={input_ids.shape}, attention_mask={attention_mask.shape}")
-                    # if is_loaded_in_8bit:
-                    #     base_model = prepare_model_for_int8_training(
-                    #         base_model,
-                    #         **peft_int8_kwargs,
-                    #     )
-                    base_model = prepare_model_for_int8_training(base_model)
-                    base_model = get_peft_model(base_model, peft_config)
+                    # base_model = get_peft_model(base_model, peft_config)
+                    # base_model = prepare_model_for_int8_training(base_model)
+                    # resume_from_checkpoint = "/home/ryadhkhsib/Dev/data/fetch/trained_models/Llama-2-7B-Chat-fp16-4-final/"
+                    # base_model = PeftModel.from_pretrained(base_model, resume_from_checkpoint)
+
+                    resume_from_checkpoint = "/home/ryadhkhsib/Dev/data/fetch/trained_models/Llama-2-7B-Chat-fp16-4-final/"
+                    # resume_from_checkpoint = "/cache/trained_models/Llama-2-7B-Chat-fp16-4-final/"
+                    peft_model = get_peft_model(base_model, peft_config)
+                    peft_model.load_adapter(resume_from_checkpoint, peft_model.active_adapter, is_trainable=True)
+
+                    base_model = peft_model
                     logger.info("peft adapter initialised")
 
                 elif trained_adapter_config is not None:
@@ -335,6 +337,7 @@ class PreTrainedModelWrapper(nn.Module, transformers.utils.PushToHubMixin):
             model.forward_kwargs = inspect.getfullargspec(model.base_model.forward).args
         else:
             model.forward_kwargs = inspect.getfullargspec(model.base_model.forward).args
+        model.forward_kwargs = ['self', 'input_ids', 'attention_mask', 'inputs_embeds', 'labels', 'output_attentions', 'output_hidden_states', 'return_dict', 'task_ids']
 
         return model
 

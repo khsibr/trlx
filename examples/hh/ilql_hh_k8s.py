@@ -4,6 +4,7 @@ import sys
 from itertools import islice
 
 from datasets import load_dataset
+from ppo_hh import create_reward_fn
 from peft import LoraConfig, TaskType
 
 import trlx
@@ -92,7 +93,7 @@ elif config_name == "7B":
     # default_config.method.gen_kwargs = dict(max_new_tokens=2, top_k=20, beta=[1, 4], temperature=1.0)
     # default_config.train.seq_length = 10
     default_config.train.batch_size = 1
-    default_config.train.checkpoint_dir = "checkpoints/Llama-2-7B-Chat-fp16-4k-sft"
+    default_config.train.checkpoint_dir = "/cache/ilql/checkpoints/Llama-2-7B-Chat-fp16-4k-sft"
     default_config.model.model_path = "TheBloke/Llama-2-7B-Chat-fp16"
     default_config.tokenizer.tokenizer_path = "TheBloke/Llama-2-7B-Chat-fp16"
     default_config.model.peft_config = {
@@ -116,18 +117,6 @@ elif config_name == "7B":
         "alpha_pattern": {}
     }
 
-    # quantization_config = BitsAndBytesConfig(
-    #     load_in_4bit=True,
-    #     bnb_4bit_compute_dtype=torch.bfloat16,
-    #     bnb_4bit_use_double_quant=True,
-    #     bnb_4bit_quant_type="nf4",
-    # )
-    #
-    # default_config.model.model_extra_configs = {
-    #     "quantization_config": quantization_config
-    # }
-
-
 def preprocess(sample):
     sample["prompt_output"] = [
         [sample["prompt"], sample["chosen"]],
@@ -135,7 +124,6 @@ def preprocess(sample):
     ]
     sample["reward"] = [1, -1]
     return sample
-
 
 def subsample(N, dataset, dataset_key):
     # Access the desired split
@@ -146,24 +134,15 @@ def subsample(N, dataset, dataset_key):
     # Update the DatasetDict
     dataset[dataset_key] = subsampled_dataset
 
-
 def main(hparams={}):
     config = TRLConfig.update(default_config, hparams)
     # print(f"Train config: {config}")
-    dataset = load_dataset("Dahoas/full-hh-rlhf").map(preprocess)
-
-    subsample(100, dataset, "train")
-    subsample(100, dataset, "test")
-    prompts_outputs = sum(dataset["train"]["prompt_output"], [])
-    rewards = sum(dataset["train"]["reward"], [])
-    eval_prompts = [{"prompt": x["prompt"], "original_output": x["chosen"]} for x in islice(dataset["test"], 280)]
-    # reward_fn = create_reward_fn()
 
     import pickle
-    with open('/home/ryadhkhsib/Dev/data/fetch/processed/rl_data.pkl', 'rb') as handle:
+    with open('/cache/data/rl_data.pkl', 'rb') as handle:
         rl_data = pickle.load(handle)
-    prompts_outputs = rl_data["all_chats"][:10]
-    rewards = rl_data["all_rewards"][:10]
+    prompts_outputs = rl_data["all_chats"][10:]
+    rewards = rl_data["all_rewards"][10:]
     eval_prompts = [{"prompt": prompts_outputs[-i][0], "original_output": prompts_outputs[-i][1]} for i in range(10)]
 
     trlx.train(

@@ -361,6 +361,7 @@ class AutoModelForCausalLMWithILQLHeads(PreTrainedModelWrapper):
         finished = torch.zeros(input_ids.shape[0], 1, dtype=torch.long, device=input_ids.device)
         bypass_peft = False
         for token in range(max_new_tokens):
+            input_ids = samples.clone()
             out = self.forward(
                 input_ids=input_ids,
                 attention_mask=attention_mask[:input_ids.shape[0], :input_ids.shape[1]].to(input_ids.device),
