@@ -87,6 +87,7 @@ class OptimizerName(str, Enum):
     ADAMW: str = "adamw"
     ADAM_8BIT_BNB: str = "adam_8bit_bnb"
     ADAMW_8BIT_BNB: str = "adamw_8bit_bnb"
+    PAGED_ADAMW_32BIT_BNB: str = "paged_adamw_32bit"
     SGD: str = "sgd"
 
 
@@ -116,6 +117,16 @@ def get_optimizer_class(name: OptimizerName):
             from bitsandbytes.optim import AdamW8bit
 
             return AdamW8bit
+        except ImportError:
+            raise ImportError(
+                "You must install the `bitsandbytes` package to use 8-bit AdamW. "
+                "Install with: `pip install bitsandbytes`"
+            )
+    if name == OptimizerName.PAGED_ADAMW_32BIT_BNB.value:
+        try:
+            from bitsandbytes.optim import PagedAdamW32bit
+
+            return PagedAdamW32bit
         except ImportError:
             raise ImportError(
                 "You must install the `bitsandbytes` package to use 8-bit AdamW. "

@@ -228,8 +228,7 @@ class PreTrainedModelWrapper(nn.Module, transformers.utils.PushToHubMixin):
                     # resume_from_checkpoint = "/home/ryadhkhsib/Dev/data/fetch/trained_models/Llama-2-7B-Chat-fp16-4-final/"
                     # base_model = PeftModel.from_pretrained(base_model, resume_from_checkpoint)
 
-                    resume_from_checkpoint = "/home/ryadhkhsib/Dev/data/fetch/trained_models/Llama-2-7B-Chat-fp16-4-final/"
-                    # resume_from_checkpoint = "/cache/trained_models/Llama-2-7B-Chat-fp16-4-final/"
+                    resume_from_checkpoint = "ryadhkhsibfetch/Llama-2-7b-Chat-fp16-4k-sft-qlora-4"
                     base_model = prepare_model_for_kbit_training(base_model)
                     peft_model = get_peft_model(base_model, peft_config)
                     peft_model.load_adapter(resume_from_checkpoint, peft_model.active_adapter, is_trainable=True)
