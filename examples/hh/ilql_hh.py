@@ -3,6 +3,7 @@ import os
 import sys
 from itertools import islice
 
+import torch
 from datasets import load_dataset
 from peft import LoraConfig, TaskType
 
@@ -51,7 +52,7 @@ config_name = os.environ.get("CONFIG_NAME")
 if config_name == "125M":
     from peft import LoraConfig, TaskType
 
-    # default_config.train.trainer_kwargs = dict(fp16=True, bf16=False,)
+    default_config.model.model_extra_configs = {"torch_dtype": torch.bfloat16}
     default_config.method.two_qs = False
     default_config.train.batch_size = 1
     default_config.train.checkpoint_dir = "checkpoints/ilql_hh_125M"
@@ -89,6 +90,8 @@ elif config_name == "20B":
     default_config.tokenizer.tokenizer_path = "EleutherAI/gpt-neox-20b"
 elif config_name == "7B":
     default_config.method.two_qs = True
+    default_config.model.model_extra_configs = {"torch_dtype": torch.bfloat16}
+
     # default_config.method.gen_kwargs = dict(max_new_tokens=2, top_k=20, beta=[1, 4], temperature=1.0)
     # default_config.train.seq_length = 10
     default_config.train.batch_size = 1
@@ -96,24 +99,32 @@ elif config_name == "7B":
     default_config.model.model_path = "TheBloke/Llama-2-7B-Chat-fp16"
     default_config.tokenizer.tokenizer_path = "TheBloke/Llama-2-7B-Chat-fp16"
     default_config.model.peft_config = {
-        "lora_alpha": 16,
-        "lora_dropout": 0.05,
-        "r": 32,
-        "peft_type": "LORA",
-        "task_type": "CAUSAL_LM",
-        "auto_mapping": None,
-        "base_model_name_or_path": None,
-        "revision": None,
-        "inference_mode": False,
-        "target_modules": None,
-        "fan_in_fan_out": False,
-        "bias": "none",
-        "modules_to_save": None,
-        "init_lora_weights": None,
-        "layers_to_transform": None,
-        "layers_pattern": None,
-        "rank_pattern": {},
-        "alpha_pattern": {}
+      "alpha_pattern": {},
+      "auto_mapping": None,
+      "base_model_name_or_path": "TheBloke/Llama-2-7B-Chat-fp16",
+      "bias": "none",
+      "fan_in_fan_out": None,
+      "inference_mode": True,
+      "init_lora_weights": True,
+      "layers_pattern": None,
+      "layers_to_transform": None,
+      "lora_alpha": 16,
+      "lora_dropout": 0.05,
+      "modules_to_save": None,
+      "peft_type": "LORA",
+      "r": 32,
+      "rank_pattern": {},
+      "revision": None,
+      "target_modules": [
+        "q_proj",
+        "down_proj",
+        "k_proj",
+        "gate_proj",
+        "o_proj",
+        "up_proj",
+        "v_proj"
+      ],
+      "task_type": "CAUSAL_LM"
     }
 
     # quantization_config = BitsAndBytesConfig(
@@ -170,7 +181,7 @@ def main(hparams={}):
         samples=prompts_outputs,
         rewards=rewards,
         config=config,
-        eval_prompts=eval_prompts,
+        # eval_prompts=eval_prompts,
         # metric_fn=lambda **kwargs: {"reward": reward_fn(**kwargs)},
         # stop_sequences=["Human:", "human:", "Assistant:", "assistant:"],
         stop_sequences=[],

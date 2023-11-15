@@ -55,7 +55,7 @@ class AccelerateRLTrainer(BaseRLTrainer):
         self.num_mb = config.train.batch_size // self.mb_size
         self.mb_count = 0
         self.accelerator = Accelerator(log_with=config.train.tracker, project_dir=config.train.logging_dir,
-                                       mixed_precision=PrecisionType.FP16)
+                                       mixed_precision=PrecisionType.BF16)
 
         if self.accelerator.state.deepspeed_plugin is not None:
             # by accelerate's default, arguments in `model.forward` would be casted to half
@@ -527,18 +527,18 @@ class AccelerateRLTrainer(BaseRLTrainer):
         self.iter_count = 0
         self.nth_evaluation = 0
 
-        if ray.is_initialized():
-            checkpoint = session.get_checkpoint()
-            if checkpoint:
-                with checkpoint.as_directory() as dir:
-                    self.accelerator.load_state(dir)
-
-                    with open(os.path.join(dir, "state.json")) as f:
-                        state = json.load(f)
-                        self.iter_count = state["iter_count"]
-        else:
-            results = self.evaluate()
-            self.accelerator.log(results, step=self.iter_count)
+        # if ray.is_initialized():
+        #     checkpoint = session.get_checkpoint()
+        #     if checkpoint:
+        #         with checkpoint.as_directory() as dir:
+        #             self.accelerator.load_state(dir)
+        #
+        #             with open(os.path.join(dir, "state.json")) as f:
+        #                 state = json.load(f)
+        #                 self.iter_count = state["iter_count"]
+        # else:
+        #     results = self.evaluate()
+        #     self.accelerator.log(results, step=self.iter_count)
 
         tbar = logging.tqdm(
             initial=self.iter_count,

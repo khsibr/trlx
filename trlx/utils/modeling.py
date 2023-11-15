@@ -49,12 +49,12 @@ def freeze_bottom_seq2seq_layers(model: nn.Module, num_layers_unfrozen: int = 0)
     decoder_norm_layer = model.decoder.final_layer_norm
     decoder_blocks = model.decoder.block[:-num_layers_unfrozen]
     blocks_to_freeze = (
-        list(encoder_blocks)
-        + list(decoder_blocks)
-        + [shared_embed]
-        + [encoder_norm_layer]
-        + [decoder_norm_layer]
-        + [decoder_embed]
+            list(encoder_blocks)
+            + list(decoder_blocks)
+            + [shared_embed]
+            + [encoder_norm_layer]
+            + [decoder_norm_layer]
+            + [decoder_embed]
     )
     for block in blocks_to_freeze:
         block.requires_grad_(False)
@@ -220,9 +220,9 @@ def logprobs_of_labels(logits, labels):
 
 
 def flatten_dict(
-    d: Union[dict, MutableMapping],
-    parent_key: str = "",
-    sep: str = "/",
+        d: Union[dict, MutableMapping],
+        parent_key: str = "",
+        sep: str = "/",
 ) -> dict:
     # From: https://stackoverflow.com/a/6027615
     items = []
@@ -296,7 +296,7 @@ class RunningMoments:
 
         new_sum = xs_var * xs_count
         # correct old_sum deviation accounting for the new mean
-        old_sum = self.var * self.count + delta**2 * self.count * xs_count / tot_count
+        old_sum = self.var * self.count + delta ** 2 * self.count * xs_count / tot_count
         tot_sum = old_sum + new_sum
 
         self.mean += delta * xs_count / tot_count
@@ -305,3 +305,24 @@ class RunningMoments:
         self.count = tot_count
 
         return xs_mean, (xs_var * xs_count / (xs_count - 1)).sqrt()
+
+
+def print_trainable_parameters(model):
+    """
+    Prints the number of trainable parameters in the model.
+    """
+    trainable_params = 0
+    all_param = 0
+    base_name_count = {}
+    base_name_trainable_count = {}
+    for name, param in model.named_parameters():
+        base_name = name.split(".")[0]
+        all_param += param.numel()
+        base_name_count[base_name] = base_name_count.get(base_name, 0) + param.numel()
+        if param.requires_grad:
+            trainable_params += param.numel()
+            base_name_trainable_count[base_name] = base_name_trainable_count.get(base_name, 0) + param.numel()
+
+    print(
+        f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param}, {base_name_count=}, {base_name_trainable_count=}"
+    )

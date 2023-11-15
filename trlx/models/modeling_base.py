@@ -28,6 +28,7 @@ from huggingface_hub import hf_hub_download
 
 import trlx.utils.logging as logging
 from trlx.utils import is_peft_available
+from trlx.utils.modeling import print_trainable_parameters
 
 logger = logging.get_logger(__name__)
 
@@ -230,8 +231,9 @@ class PreTrainedModelWrapper(nn.Module, transformers.utils.PushToHubMixin):
 
                     resume_from_checkpoint = "ryadhkhsibfetch/Llama-2-7b-Chat-fp16-4k-sft-qlora-4"
                     base_model = prepare_model_for_kbit_training(base_model)
-                    peft_model = get_peft_model(base_model, peft_config)
-                    peft_model.load_adapter(resume_from_checkpoint, peft_model.active_adapter, is_trainable=True)
+                    # peft_model = get_peft_model(base_model, peft_config)
+                    # peft_model.load_adapter(resume_from_checkpoint, peft_model.active_adapter, is_trainable=True)
+                    peft_model = PeftModel.from_pretrained(model=base_model, model_id=resume_from_checkpoint, is_trainable=True)
                     base_model = peft_model
                     logger.info("peft adapter initialised")
 
@@ -266,7 +268,7 @@ class PreTrainedModelWrapper(nn.Module, transformers.utils.PushToHubMixin):
 
             if peft_config is not None:
                 if is_loaded_in_8bit:
-                    base_model = prepare_model_for_int8_training(
+                    base_model = prepare_model_for_kbit_training(
                         base_model,
                         **peft_int8_kwargs,
                     )
@@ -337,7 +339,7 @@ class PreTrainedModelWrapper(nn.Module, transformers.utils.PushToHubMixin):
         else:
             model.forward_kwargs = inspect.getfullargspec(model.base_model.forward).args
         model.forward_kwargs = ['self', 'input_ids', 'attention_mask', 'inputs_embeds', 'labels', 'output_attentions', 'output_hidden_states', 'return_dict', 'task_ids']
-
+        print_trainable_parameters(model)
         return model
 
     def save_pretrained(self, *args, **kwargs):
